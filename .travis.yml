@@ -1,0 +1,29 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t chrishao/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run chrishao/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t chrishao/multi-client -f ./client 
+
+  - docker build -t chrishao/multi-nginx ./nginx
+
+  - docker build -t chrishao/multi-server ./server
+
+  - docker build -t chrishao/multi-worker ./worker
+
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  
+  # Take those images and push them to docker hub
+  - docker push chrishao/multi-client
+  - docker push chrishao/multi-nginx
+  - docker push chrishao/multi-server
+  - docker push chrishao/multi-worker
+
